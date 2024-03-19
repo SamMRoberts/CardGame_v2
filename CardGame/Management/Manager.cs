@@ -2,12 +2,11 @@ using SamMRoberts.CardGame.Components;
 
 namespace SamMRoberts.CardGame.Management
 {
-    public class Manager : IManager
+    public class Manager : IComponentManager
     {
         public Manager()
         {
-            _console = new Components.Console();
-            _console.SetManager(this);
+            _console = new Components.Console(this);
             StartComponent(_console);
         }
 
@@ -26,16 +25,13 @@ namespace SamMRoberts.CardGame.Management
             throw new NotImplementedException();
         }
 
-        public void UpdateState(IComponent component, Enum state)
+        public void Exit()
         {
-            System.Diagnostics.Debug.WriteLine($"Updating state of {component} to {state}", $"{nameof(Manager)}.{nameof(UpdateState)}");
-            if (Components.TryGetValue(component, out var componentState))
-                Components[component] = (Component.States)state;
-            else
-                Components.Add(component, (Component.States)state);
+            System.Diagnostics.Debug.WriteLine("Exiting...", $"[{this.GetType().Name ?? string.Empty}::{nameof(Manager)}.{nameof(Exit)}]");
+            System.Environment.Exit(0);
         }
 
         private Components.Console _console;
-        public Dictionary<IComponent, Component.States> Components { get; } = new Dictionary<IComponent, Component.States>();
+        private Handlers.ConsoleHandler _consoleHandler;
     }
 }

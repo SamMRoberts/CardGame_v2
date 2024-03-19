@@ -1,15 +1,19 @@
+using System.Reflection;
+
 namespace SamMRoberts.CardGame.Components
 {
-    public class Console : Component, IAsyncReader, IWriter, ICommunicator
+    public class Console : ICommunicator
     {
-        public Console()
+        public Console(IComponentManager manager)
         {
+            _manager = manager;
+            _handler = new Handlers.ConsoleHandler(this);
         }
 
         public void Send(string message)
         {
             // TODO: Implement production code
-            System.Diagnostics.Debug.WriteLine($"You entered: {message}.", $"[{nameof(Console)}.{nameof(Send)}]");
+            _handler?.Handle(message);
         }
 
         public void Write(string message)
@@ -22,36 +26,36 @@ namespace SamMRoberts.CardGame.Components
             System.Console.WriteLine(FormatMessage(message));
         }
 
-        public override void Start()
+        public void Start()
         {
-            SetState(States.Starting);
+            ((IStateful)this).SetState(IStateful.States.Starting);
             Listen();
         }
 
-        public override void Stop()
+        public void Stop()
         {
-            SetState(States.Stopping);
+            ((IStateful)this).SetState(IStateful.States.Stopping);
         }
 
-        public override void SetManager(IManager manager)
+        public void SetManager(IComponentManager manager)
         {
-            if (this.State == States.Stopping || this.State == States.Starting)
+            if (this.State == IStateful.States.Stopping || this.State == IStateful.States.Starting)
                 throw new System.Exception("Cannot set manager while component is starting or stopping.");
             if (_manager != null)
                 throw new System.Exception("Component already has a manager.");
             _manager = manager;
         }
 
-        public override void RemoveManager()
+        public void RemoveManager()
         {
-            if (this.State != States.Stopped)
+            if (this.State != IStateful.States.Stopped)
                 throw new System.Exception("Cannot remove manager from a running component.");
             if (_manager == null)
                 return;
             _manager = null;
         }
 
-        public override IManager GetManager()
+        public IComponentManager GetManager()
         {
             if (_manager == null)
                 throw new System.Exception("Component does not have a manager.");
@@ -60,10 +64,10 @@ namespace SamMRoberts.CardGame.Components
 
         private void Listen()
         {
-            System.Diagnostics.Debug.WriteLine("Listener has started.", $"[{nameof(Console)}.{nameof(Listen)}]");
+            System.Diagnostics.Debug.WriteLine("Listener has started.", $"[{this.GetType()?.Name}.{MethodBase.GetCurrentMethod()?.Name}]");
             Task listener = Task.Factory.StartNew(DoRead);
             listener.Wait();
-            System.Diagnostics.Debug.WriteLine("Listener has stopped.", $"[{nameof(Console)}.{nameof(Listen)}]");
+            System.Diagnostics.Debug.WriteLine("Listener has stopped.", $"[{this.GetType()?.Name ?? string.Empty}::{nameof(Console)}.{nameof(Listen)}]");
         }
 
         private static string GetTimeStamp()
@@ -78,8 +82,8 @@ namespace SamMRoberts.CardGame.Components
 
         private void DoRead()
         {
-            SetState(States.Running);
-            while(State == States.Running)
+            ((IStateful)this).SetState(IStateful.States.Running);
+            while(State == IStateful.States.Running)
             {
                 var input = System.Console.ReadLine();
                 if (input == null)
@@ -87,5 +91,18 @@ namespace SamMRoberts.CardGame.Components
                 Send(input);
             }
         }
+
+        void IStateful.SetState(IStateful.States state)
+        {
+            System.Diagnostics.Debug.WriteLine($"Setting state of {this} to {state}", $"[{this.GetType().Name ?? string.Empty}::{nameof(Console)}.{nameof(IStateful.SetState)}]");
+            State = state;
+            if (_manager == null)
+                throw new System.Exception("Component does not have a manager.");
+        }
+
+        public IStateful.States State { get; private set; } = IStateful.States.Stopped;
+
+        private IComponentManager? _manager;
+        private IStringHandler? _handler;
     }
 }

@@ -1,21 +1,17 @@
 namespace SamMRoberts.CardGame
 {
-    public interface IManager
+    public interface IComponentManager
     {
-        //void AddComponent(IComponent manageable);
-        //void RemoveComponent(IComponent manageable);
-        //void StartComponent(IComponent component);
         void StopComponent(IComponent component);
         void RestartComponent(IComponent component);
-        void UpdateState(IComponent component, Enum state);
+        void Exit();
     }
 
-    public interface IComponent : IManageable
+    public interface IComponent : IManageable, IStateful
     {
-        IManager GetManager();
-        void SetManager(IManager manager);
+        IComponentManager GetManager();
+        void SetManager(IComponentManager manager);
         void RemoveManager();
-        void SetState(Components.Component.States state);
     }
 
     public interface IManageable
@@ -24,9 +20,27 @@ namespace SamMRoberts.CardGame
         void Stop();
     }
 
+    public interface IStringHandler
+    {
+        void Handle(string message);
+    }
+
     public interface IAsyncReader
     {
-        //void Listen();
+        //void DoRead();
+    }
+
+    public interface IStateful
+    {
+        enum States
+        {
+            Starting,
+            Running,
+            Stopping,
+            Stopped
+        }
+        States State { get; }
+        void SetState(States state);
     }
 
     public interface IWriter
@@ -35,7 +49,7 @@ namespace SamMRoberts.CardGame
         void WriteLine(string message);
     }
 
-    public interface ICommunicator : IComponent
+    public interface ICommunicator : IComponent, IAsyncReader, IWriter
     {
         void Send(string message);
     }

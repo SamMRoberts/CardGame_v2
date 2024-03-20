@@ -7,31 +7,46 @@ namespace SamMRoberts.CardGame.Management
         public Manager()
         {
             _console = new Components.Console(this);
-            StartComponent(_console);
+            _console.AddBlackjackHandlers();
+            Start().Wait();
         }
 
-        public void StartComponent(IComponent component)
+        public async Task Start()
         {
-            component.Start();
+            WelcomeBanner();
+            Task listener = StartComponent(_console);
+
+            await listener;
+        }
+
+        public async Task StartComponent(IComponent component)
+        {
+            await component.Start();
         }
 
         public void StopComponent(IComponent component)
         {
-            throw new NotImplementedException();
+            component.Stop();
         }
 
-        public void RestartComponent(IComponent component)
+        public async Task RestartComponent(IComponent component)
         {
-            throw new NotImplementedException();
+            component.Stop();
+            await component.Start();
         }
 
         public void Exit()
         {
-            System.Diagnostics.Debug.WriteLine("Exiting...", $"[{this.GetType().Name ?? string.Empty}::{nameof(Manager)}.{nameof(Exit)}]");
+            _console.WriteLine("Exiting game...");
             System.Environment.Exit(0);
         }
 
+        private void WelcomeBanner()
+        {
+            _console.WriteLine("Welcome to the card game!");
+            _console.WriteLine("Type '/exit' to quit and /help for commands.");
+        }
+
         private Components.Console _console;
-        private Handlers.ConsoleHandler _consoleHandler;
     }
 }

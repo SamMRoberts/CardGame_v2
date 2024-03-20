@@ -2,8 +2,9 @@ namespace SamMRoberts.CardGame
 {
     public interface IComponentManager
     {
+        Task StartComponent(IComponent component);
         void StopComponent(IComponent component);
-        void RestartComponent(IComponent component);
+        Task RestartComponent(IComponent component);
         void Exit();
     }
 
@@ -14,15 +15,20 @@ namespace SamMRoberts.CardGame
         void RemoveManager();
     }
 
+    public interface IDealer
+    {
+        
+    }
+
     public interface IManageable
     {
-        void Start();
+        Task Start();
         void Stop();
     }
 
-    public interface IStringHandler
+    public interface IHandler<T>
     {
-        void Handle(string message);
+        void Handle(T message);
     }
 
     public interface IAsyncReader

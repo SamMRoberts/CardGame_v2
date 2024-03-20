@@ -2,18 +2,35 @@ using System.Reflection;
 
 namespace SamMRoberts.CardGame.Components
 {
+    enum Test {
+        test1,
+        test2
+    }
     public class Console : ICommunicator
     {
         public Console(IComponentManager manager)
         {
+            State = IStateful.States.Starting;
             _manager = manager;
-            _handler = new Handlers.ConsoleHandler(this);
+            _handlers = [
+                new Handlers.ConsoleHandler(this),
+                new Handlers.DefaultHandler(this)
+            ];
+        }
+
+        public void AddBlackjackHandlers()
+        {
+            _handlers.Insert(0, new Handlers.GameHandler(this));
         }
 
         public void Send(string message)
         {
             // TODO: Implement production code
-            _handler?.Handle(message);
+            //_handler?.Handle(message);
+            foreach (var handler in _handlers)
+            {
+                handler.Handle(message);
+            }
         }
 
         public void Write(string message)
@@ -26,10 +43,10 @@ namespace SamMRoberts.CardGame.Components
             System.Console.WriteLine(FormatMessage(message));
         }
 
-        public void Start()
+        public async Task Start()
         {
             ((IStateful)this).SetState(IStateful.States.Starting);
-            Listen();
+            await Listen();
         }
 
         public void Stop()
@@ -62,12 +79,10 @@ namespace SamMRoberts.CardGame.Components
             return _manager;
         }
 
-        private void Listen()
+        private void Listen0()
         {
-            System.Diagnostics.Debug.WriteLine("Listener has started.", $"[{this.GetType()?.Name}.{MethodBase.GetCurrentMethod()?.Name}]");
-            Task listener = Task.Factory.StartNew(DoRead);
-            listener.Wait();
-            System.Diagnostics.Debug.WriteLine("Listener has stopped.", $"[{this.GetType()?.Name ?? string.Empty}::{nameof(Console)}.{nameof(Listen)}]");
+            //Task listener = Task.Factory.StartNew(DoRead);
+            //listener.Wait();
         }
 
         private static string GetTimeStamp()
@@ -80,21 +95,23 @@ namespace SamMRoberts.CardGame.Components
             return $"[{GetTimeStamp()}] {message}";
         }
 
-        private void DoRead()
+        private async Task Listen()
         {
             ((IStateful)this).SetState(IStateful.States.Running);
-            while(State == IStateful.States.Running)
+            await Task.Run(() =>
             {
-                var input = System.Console.ReadLine();
-                if (input == null)
-                    continue;
-                Send(input);
-            }
+                while (State == IStateful.States.Running)
+                {
+                    var input = System.Console.ReadLine();
+                    if (input == null)
+                        continue;
+                    Send(input);
+                }
+            });
         }
 
         void IStateful.SetState(IStateful.States state)
         {
-            System.Diagnostics.Debug.WriteLine($"Setting state of {this} to {state}", $"[{this.GetType().Name ?? string.Empty}::{nameof(Console)}.{nameof(IStateful.SetState)}]");
             State = state;
             if (_manager == null)
                 throw new System.Exception("Component does not have a manager.");
@@ -103,6 +120,7 @@ namespace SamMRoberts.CardGame.Components
         public IStateful.States State { get; private set; } = IStateful.States.Stopped;
 
         private IComponentManager? _manager;
-        private IStringHandler? _handler;
+        //private IHandler<string>? _handler;
+        private IList<IHandler<string>> _handlers;
     }
 }

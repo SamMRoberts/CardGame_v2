@@ -1,68 +1,61 @@
 using System.Diagnostics;
-using SamMRoberts.CardGame.Components;
+//using SamMRoberts.CardGame.Components;
 
 namespace SamMRoberts.CardGame.Handlers
 {
-    public enum ConsoleCommands
+    public class ConsoleHandler : IHandler<string>
     {
-        exit,
-        help
-    }
+        internal enum Commands
+        {
+            exit,
+            help
+        }
 
-    public class ConsoleHandler : IStringHandler
-    {
         public ConsoleHandler(Components.Console console)
         {
             _console = console;
         }
 
-        public void Handle(string message)
+        public virtual void Handle(string message)
         {
             if (string.IsNullOrWhiteSpace(message))
             {
                 _console.WriteLine("Please enter a command.");
                 return;
             }
-            System.Diagnostics.Debug.WriteLine($"You entered: {message}.", $"[{this.GetType().Name ?? string.Empty}::{nameof(ConsoleHandler)}.{nameof(Handle)}]");
 
-            if (message.Substring(0, 1) == "/")
+            if (IsCommand(message))
             {
-                System.Diagnostics.Debug.WriteLine($"Command detected: {message}.", $"[{this.GetType().Name ?? string.Empty}::{nameof(ConsoleHandler)}.{nameof(Handle)}");
                 var command = message.Substring(1).ToLower();
-                if (Enum.TryParse<ConsoleCommands>(command, out var consoleCommand))
+                if (Enum.TryParse<Commands>(command, out var consoleCommand))
                 {
                     switch (consoleCommand)
                     {
-                        case ConsoleCommands.exit:
-                            _console.WriteLine("Exiting game...");
+                        case Commands.exit:
                             _console.GetManager().Exit();
                             break;
-                        case ConsoleCommands.help:
-                            _console.WriteLine($"Available commands: {GetAvailableCommands()}");
+                        case Commands.help:
+                            _console.WriteLine($"Console commands: {GetAvailableCommands<Commands>()}");
                             break;
                         default:
-                            _console.WriteLine($"Command not recognized: {message}.");
                             break;
                     }
                 }
-                else
-                {
-                    _console.WriteLine($"Command not recognized: {message}.");
-                }
-            }
-            else
-            {
-                _console.WriteLine($"Echo: {message}.");
             }
         }
 
-        private string GetAvailableCommands()
+        protected bool IsCommand(string message)
         {
-            var consoleCommands = Enum.GetNames(typeof(ConsoleCommands));
-            var availableCommands = string.Join(", ", consoleCommands);
+            return message[..1] == "/";
+        }
+
+        protected string GetAvailableCommands<T>()
+        {
+            var Commands = Enum.GetNames(typeof(T));
+            var availableCommands = string.Join(", ", Commands);
             return availableCommands;
         }
 
-        private Components.Console _console;
+        protected Components.Console _console;
     }
 }

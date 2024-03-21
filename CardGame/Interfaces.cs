@@ -17,7 +17,7 @@ namespace SamMRoberts.CardGame
 
     public interface IDealer
     {
-        
+
     }
 
     public interface IManageable
@@ -58,5 +58,25 @@ namespace SamMRoberts.CardGame
     public interface ICommunicator : IComponent, IAsyncReader, IWriter
     {
         void Send(string message);
+    }
+
+    public interface ICardSymbolGetter<TFace>
+        where TFace : Enum
+    {
+        string GetSymbol(TFace face);
+    }
+
+    public interface ICardValueGetter<TFace>
+        where TFace : Enum
+    {
+        int GetValue(TFace face);
+    }
+
+    public interface IGameManager
+    {
+        void AddPlayer();
+        void RemovePlayer();
+        void StartGame();
+        void EndGame();
     }
 }

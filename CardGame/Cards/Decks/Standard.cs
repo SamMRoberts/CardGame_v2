@@ -1,7 +1,7 @@
 namespace SamMRoberts.CardGame.Cards.Decks.Types.Standard
 {
-    public enum Face { Two = 2, Three, Four, Five, Six, Seven, Eight, Nine, Ten, Jack, Queen, King, Ace }
-    public enum Suit { Diamonds, Clubs, Hearts, Spades }
+    public enum Face : int { Two = 2, Three, Four, Five, Six, Seven, Eight, Nine, Ten, Jack, Queen, King, Ace }
+    public enum Suit { Diamonds = '♦', Clubs = '♣', Hearts = '♥', Spades = '♠' }
     public enum Color { Red, Black }
 
     public class StandardDeckBuilder : DeckBuilder<Face, Suit, Color>
@@ -10,68 +10,45 @@ namespace SamMRoberts.CardGame.Cards.Decks.Types.Standard
         protected override Suit Suits(Suit suit) => suit;
         protected override Color Colors(Color color) => color;
 
-        public StandardDeckBuilder()
-        {
-            deck = new StandardDeck();
-        }
-
         public override Deck NewDeck()
         {
-            return new StandardDeck();
+            return new StandardDeck(this);
         }
+
+        internal readonly ICardSymbolGetter<Face> symbols = new StandardCardSymbol();
     }
 
     public class StandardDeck : Deck
     {
-        public StandardDeck() : base("Standard")
+        public StandardDeck(StandardDeckBuilder standardDeckBuilder) : base("Standard")
         {
+            builder = standardDeckBuilder;
             foreach (Suit suit in Enum.GetValues(typeof(Suit)))
             {
                 foreach (Face face in Enum.GetValues(typeof(Face)))
                 {
-                    Cards.Add(new Card(face, suit, suit == Suit.Diamonds || suit == Suit.Hearts ? Color.Red : Color.Black));
+                    Cards.Add(new Card(face, builder.symbols.GetSymbol(face), suit,
+                        (char)suit, suit == Suit.Diamonds || suit == Suit.Hearts ? Color.Red : Color.Black));
                 }
             }
         }
+
+        private readonly StandardDeckBuilder builder;
     }
 
-    public class StandardCardEvaluator : CardEvaluator<Face>
+    public class StandardCardSymbol : ICardSymbolGetter<Face>
     {
-        protected override Face Faces(Face face) => face;
-
-        public override string GetSymbol(Face face)
+        public string GetSymbol(Face face)
         {
-            foreach (Face f in Enum.GetValues(typeof(Face)))
+            if ((int)face > 10)
             {
-                if ((int)f > 10)
-                {
-                    return f.ToString()[..1];
-                }
-                else
-                {
-                    return ((int)f).ToString();
-                }
+                return face.ToString()[..1];
             }
-            throw new NullReferenceException();
-        }
+            else
+            {
+                return ((int)face).ToString();
+            }
 
-        public override int GetValue(Face face)
-        {
-            foreach (Face f in Enum.GetValues(typeof(Face)))
-            {
-                if (f.ToString() == "Ace")
-                {
-                    return 11;
-                }
-                else if ((int)f > 10)
-                {
-                    return 10;
-                }
-                else
-                {
-                    return (int) f;
-                }
-            }
             throw new NullReferenceException();
         }
     }

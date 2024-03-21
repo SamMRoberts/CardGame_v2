@@ -1,4 +1,5 @@
 using SamMRoberts.CardGame.Components;
+using SamMRoberts.CardGame.Games.Blackjack;
 
 namespace SamMRoberts.CardGame.Management
 {
@@ -8,6 +9,7 @@ namespace SamMRoberts.CardGame.Management
         {
             _console = new Components.Console(this);
             _console.AddBlackjackHandlers();
+            _environment = new BlackjackEnvironment();
             Start().Wait();
         }
 
@@ -48,5 +50,6 @@ namespace SamMRoberts.CardGame.Management
         }
 
         private Components.Console _console;
+        private Environment _environment;
     }
 }

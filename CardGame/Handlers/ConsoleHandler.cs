@@ -26,7 +26,7 @@ namespace SamMRoberts.CardGame.Handlers
 
             if (IsCommand(message))
             {
-                var command = message.Substring(1).ToLower();
+                var command = ParseCommand(message);
                 if (Enum.TryParse<Commands>(command, out var consoleCommand))
                 {
                     switch (consoleCommand)
@@ -44,12 +44,17 @@ namespace SamMRoberts.CardGame.Handlers
             }
         }
 
-        protected bool IsCommand(string message)
+        protected static bool IsCommand(string message)
         {
             return message[..1] == "/";
         }
 
-        protected string GetAvailableCommands<T>()
+        protected static string ParseCommand(string message)
+        {
+            return message[1..].ToLower();
+        }
+
+        protected static string GetAvailableCommands<T>()
         {
             var Commands = Enum.GetNames(typeof(T));
             var availableCommands = string.Join(", ", Commands);

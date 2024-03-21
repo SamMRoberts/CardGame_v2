@@ -1,3 +1,5 @@
+using SamMRoberts.CardGame.Cards.Decks;
+
 namespace SamMRoberts.CardGame.Components
 {
     public class Table : IComponent
@@ -43,6 +45,9 @@ namespace SamMRoberts.CardGame.Components
         }
 
         private IComponentManager _manager;
+        private Deck _deck;
+        private IList<object> _players;  // TODO: create player class/interface
+        private IDealer _dealer;
 
         public IStateful.States State => throw new NotImplementedException();
     }
